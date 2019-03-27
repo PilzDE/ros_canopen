@@ -152,6 +152,9 @@ void EMCYHandler::resolveErrorCode(std::stringstream &buf, int error_code){
         {{0xFF00, 0xFF00}, "Device Specific"}
     };
     error_code_defintion::const_iterator it = error_map.begin();
+    char hex[12];
+    sprintf(hex, " %#08x ", error_code);
+    buf << hex;
     for(; it != error_map.end(); ++it){
         /* mask                              code */
         if(it->first.second & error_code == it->first.first)
