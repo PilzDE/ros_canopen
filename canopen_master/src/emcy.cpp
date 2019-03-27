@@ -70,6 +70,7 @@ void EMCYHandler::handleRead(LayerStatus &status, const LayerState &current_stat
         }
     }
 }
+
 void EMCYHandler::handleWrite(LayerStatus &status, const LayerState &current_state) {
     // noithing to do
 }
@@ -114,19 +115,51 @@ void EMCYHandler::handleDiag(LayerReport &report){
 
     }
 }
+
 void EMCYHandler::handleInit(LayerStatus &status){
     uint8_t error_register = 0;
     if(!error_register_.get(error_register)){
         status.error("Could not read error error_register");
         return;
     }else if(error_register & 1){
-        LOG("ER: " << int(error_register));
+        std::stringstream buf;
+        buf << "ER: ";
+        resolveErrorCode(buf, int(error_register));
+        LOG(buf.str());
         status.error("Node has emergency error");
         return;
     }
 
     resetErrors(status);
 }
+
+void EMCYHandler::resolveErrorCode(std::stringstream &buf, int error_code){
+    typedef std::map<std::pair<int, int>, std::string> error_code_defintion;
+    const error_code_defintion error_map = {
+        /* https://www.canopensolutions.com/english/about_canopen/emergency.shtml
+          code,   mask,    Error description*/
+        {{0x0000, 0xFF00}, "No Error"},
+        {{0x1000, 0xFF00}, "Generic Error"},
+        {{0x2000, 0xF000}, "Current"},
+        {{0x3000, 0xF000}, "Voltage"},
+        {{0x4000, 0xF000}, "Temperature"},
+        {{0x5000, 0xFF00}, "Device Hardware"},
+        {{0x6000, 0xF000}, "Device Software"},
+        {{0x7000, 0xFF00}, "Additional Modules"},
+        {{0x8000, 0xF000}, "Monitoring"},
+        {{0x9000, 0xFF00}, "External Error"},
+        {{0xF000, 0xFF00}, "Additional Functions"},
+        {{0xFF00, 0xFF00}, "Device Specific"}
+    };
+    error_code_defintion::const_iterator it = error_map.begin();
+    for(; it != error_map.end(); ++it){
+        /* mask                              code */
+        if(it->first.second & error_code == it->first.first)
+            buf << it->second;
+            break;
+    }
+}
+
 void EMCYHandler::resetErrors(LayerStatus &status){
     if(num_errors_.valid()) num_errors_.set(0);
     has_error_ = false;
@@ -135,8 +168,10 @@ void EMCYHandler::resetErrors(LayerStatus &status){
 void EMCYHandler::handleRecover(LayerStatus &status){
     handleInit(status);
 }
+
 void EMCYHandler::handleShutdown(LayerStatus &status){
 }
+
 void EMCYHandler::handleHalt(LayerStatus &status){
     // do nothing
 }

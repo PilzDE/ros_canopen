@@ -151,6 +151,7 @@ class EMCYHandler : public Layer {
     virtual void handleDiag(LayerReport &report);
 
     virtual void handleInit(LayerStatus &status);
+    virtual void resolveErrorCode(std::stringstream &buf, int error_code);
     virtual void handleRecover(LayerStatus &status);
     virtual void handleRead(LayerStatus &status, const LayerState &current_state);
     virtual void handleWrite(LayerStatus &status, const LayerState &current_state);

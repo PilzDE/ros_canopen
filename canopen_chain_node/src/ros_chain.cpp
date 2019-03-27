@@ -128,7 +128,7 @@ bool RosChain::handle_init(std_srvs::Trigger::Request  &req, std_srvs::Trigger::
 
     return true;
 }
-bool RosChain::handle_recover(std_srvs::Trigger::Request  &req, std_srvs::Trigger::Response &res){
+bool RosChain::handle_recover(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res){
     ROS_INFO("Recovering XXX");
     boost::mutex::scoped_lock lock(mutex_);
     res.success = false;
